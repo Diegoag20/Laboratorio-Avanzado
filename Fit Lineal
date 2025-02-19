@@ -1,0 +1,46 @@
+import numpy as np
+import scipy.optimize as opt
+import matplotlib.pyplot as plt
+
+# Datos experimentales
+d_i = np.array([15.6, 16.6, 18.0, 21.3, 26.60])  # cm
+d_o = np.array([24.0, 21.5, 19.0, 16.5, 14.0])  # cm
+sigma_d_i = np.full_like(d_i, 0.2)  # Incertidumbre en d_i (cm)
+sigma_d_o = np.full_like(d_o, 0.2)  # Incertidumbre en d_o (cm)
+
+# Cálculo de 1/i y 1/o con propagación de incertidumbre
+inv_d_i = 1 / d_i
+inv_d_o = 1 / d_o
+sigma_inv_d_i = sigma_d_i / d_i**2
+sigma_inv_d_o = sigma_d_o / d_o**2
+
+# Ajuste lineal ponderado
+def linear_fit(x, a, b):
+    return -a*x + b
+
+popt, pcov = opt.curve_fit(linear_fit, inv_d_o, inv_d_i, sigma=sigma_inv_d_i, absolute_sigma=True)
+a_fit, b_fit = popt
+sigma_a, sigma_b = np.sqrt(np.diag(pcov))
+
+print(f"Valor de b ajustado: {b_fit:.3f}")
+print(f"Incerteza de b: {sigma_b:.3f}")
+
+# Gráfica con barras de error
+plt.errorbar(inv_d_o, inv_d_i, xerr=sigma_inv_d_o, yerr=sigma_inv_d_i, fmt='o', label="Datos experimentales")
+x_fit = np.linspace(min(inv_d_o), max(inv_d_o), 100)
+plt.plot(x_fit, linear_fit(x_fit, *popt), 'r-', label=f'Ajuste: $y = -({a_fit:.3f} \pm {sigma_a:.3f})x + ({b_fit:.3f} \pm {sigma_b:.3f})$')
+
+# Estilización de la gráfica
+plt.xlabel(r"$1/o$ (cm$^{-1}$)")
+plt.ylabel(r"$1/i$ (cm$^{-1}$)")
+plt.title("Ajuste de $1/i$ vs. $1/o$")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Mostrar los parámetros del ajuste
+b_fit, sigma_b
+
+
+
+
