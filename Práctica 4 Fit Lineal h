@@ -1,0 +1,38 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import optimize
+
+# Datos tabulados (ejemplo, reemplaza estos valores con tus datos reales)
+frecuencia = np.array([5.19, 5.49, 6.88, 7.41, 8.22])  # Reemplaza f1, f2, ..., f5 con tus valores de frecuencia
+voltaje_frenado = np.array([0.35, 0.45, 0.8, 1.15, 1.30])  # Reemplaza v1, v2, ..., v5 con tus valores de voltaje de frenado
+
+# Definir la función lineal
+def modelo_lineal(x, pendiente, interseccion):
+    return pendiente * x + interseccion
+
+# Ajuste con incertidumbres usando curve_fit
+parametros, covarianza = optimize.curve_fit(modelo_lineal, frecuencia, voltaje_frenado)
+
+# Extraer la pendiente y el intercepto
+pendiente, interseccion = parametros
+
+# Calcular las incertidumbres (errores estándar) de los parámetros
+incertidumbre_pendiente, incertidumbre_interseccion = np.sqrt(np.diag(covarianza))
+
+# Imprimir los resultados
+print(f"Pendiente: {pendiente:.2f} ± {incertidumbre_pendiente:.2f}")
+print(f"Intersección: {interseccion:.2f} ± {incertidumbre_interseccion:.2f}")
+
+# Generamos los valores ajustados para la gráfica
+frecuencia_ajustada = np.linspace(min(frecuencia), max(frecuencia), 100)
+voltaje_ajustado = modelo_lineal(frecuencia_ajustada, pendiente, interseccion)
+
+# Graficar los datos y el ajuste lineal
+plt.scatter(frecuencia, voltaje_frenado, color='blue', label='Datos')
+plt.plot(frecuencia_ajustada, voltaje_ajustado, color='red', label=f'Ajuste lineal: V = ({pendiente:.2f} ± {incertidumbre_pendiente:.2f})f + ({interseccion:.2f} ± {incertidumbre_interseccion:.2f})')
+plt.xlabel('Frecuencia * 10^(14)(Hz)')
+plt.ylabel('Voltaje de Frenado |V|')
+plt.title('Ajuste Lineal de Voltaje de Frenado vs Frecuencia')
+plt.legend()
+plt.grid(True)
+plt.show()
