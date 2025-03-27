@@ -1,0 +1,26 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Valores experimentales y teóricos
+h_experimental = 5.53  # Valor obtenido
+incertidumbre_h = 0.48  # Incertidumbre
+h_teorico = 6.61  # Valor teórico de la constante de Planck en J·s
+
+# Crear la figura y los ejes
+plt.figure(figsize=(8, 6))
+
+# Graficar el valor experimental con su barra de error
+plt.errorbar(1, h_experimental, yerr=incertidumbre_h, fmt='o', capsize=5, label="Valor Experimental", color="blue")
+
+# Graficar la línea horizontal del valor teórico
+plt.axhline(y=h_teorico, color='red', linestyle='--', label="Valor Teórico")
+
+# Etiquetas y título
+plt.ylabel("Constante de Planck 10^(-34) (J·s)")
+plt.xticks([])  # Ocultar eje x ya que solo hay un punto
+plt.title("Comparación de h experimental vs. h teórico")
+plt.legend()
+plt.grid(True)
+
+# Mostrar la gráfica
+plt.show()
