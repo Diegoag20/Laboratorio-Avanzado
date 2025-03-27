@@ -1,0 +1,62 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+# Cargar los datos desde el archivo Excel
+file_path = "C:\\Users\\Diego\\Downloads\\Uv ordenado.xlsx"
+df = pd.read_excel(file_path, sheet_name="Hoja2")
+
+# Extraer los datos relevantes
+voltaje = df.iloc[11:27, 0].astype(float).values  # Voltaje de frenado (Vf)
+corriente = df.iloc[11:27, 2].astype(float).values  # Corriente (A)
+incertidumbre_voltaje = df.iloc[11:27, 1].astype(float).values
+incertidumbre_corriente = df.iloc[11:27, 3].astype(float).values 
+
+
+# Filtrar los datos para excluir voltajes entre 0 V y -0.5 V
+mask = (voltaje < -0.7)  # Filtra solo los voltajes menores a -0.5 V
+voltaje_filtrado = voltaje[mask]
+corriente_filtrada = corriente[mask]
+
+# Calcular derivada numérica
+derivada = np.gradient(corriente_filtrada, voltaje_filtrado)
+
+
+
+# Encontrar el índice donde la derivada comienza a crecer significativamente
+umbral = 0.00001 * np.max(derivada)
+indice_cambio = np.argmin(derivada > umbral)
+
+# Definir función de recta tangente
+def recta(x, m, b):
+    return m*x + b
+
+
+# Ajustar la recta en los primeros puntos donde crece la corriente
+popt, pcov = curve_fit(recta, voltaje_filtrado[indice_cambio:indice_cambio+4], corriente_filtrada[indice_cambio:indice_cambio+4])
+m, b = popt
+sigma_m, sigma_b = np.sqrt(np.diag(pcov))  # Incertidumbre de los parámetros
+
+# Cálculo del voltaje de frenado
+V_f = -b / m
+
+# Incertidumbre en el voltaje de frenado
+sigma_V_f = abs(sigma_b / m) + abs((b * sigma_m) / (m**2))
+
+print(f"Voltaje de frenado: {V_f:.4f} V ± {sigma_V_f:.4f} V")
+
+
+
+
+# Graficar los datos con la recta tangente
+plt.figure(figsize=(8,6))
+plt.errorbar(voltaje, corriente, xerr=incertidumbre_voltaje, yerr=incertidumbre_corriente, 
+             fmt='o', color="black", label='Datos experimentales', capsize=5, elinewidth=1, markersize=5)
+plt.plot(voltaje, recta(voltaje, *popt), 'r--', label="Recta tangente")
+plt.xlabel("Voltaje de frenado $V_f$ (V)")
+plt.ylabel("Corriente $I_c$ (A)x10^-(11)")
+plt.title("Corriente vs. Voltaje de frenado (UV)")
+plt.grid(True)
+plt.legend()
+plt.show()
